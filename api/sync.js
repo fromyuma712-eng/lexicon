@@ -67,10 +67,12 @@ function clean(d) {
   const set = d.set && typeof d.set === 'object' && !Array.isArray(d.set) ? d.set : null;
   return { v: 1, cards: obj(d.cards), del: obj(d.del), gcards: obj(d.gcards), gdel: obj(d.gdel), set, reads };
 }
+// 圧縮して配られると ETag が「弱い」形（W/"…"）になり、条件付き書き込みが必ず失敗する。
+// 圧縮を断り、それでも弱い印が付いていれば外して、書き込みの条件に使える形にする
 async function load(path) {
-  const r = await get(path, { access: 'private', useCache: false });
+  const r = await get(path, { access: 'private', useCache: false, headers: { 'Accept-Encoding': 'identity' } });
   if (!r) return null;
-  return { doc: JSON.parse(await new Response(r.stream).text()), etag: r.blob.etag };
+  return { doc: JSON.parse(await new Response(r.stream).text()), etag: String(r.blob.etag || '').replace(/^W\//, '') };
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 // 版の不一致（412）と、別の書き込みが進行中の衝突（409）はどちらも再試行してよい
