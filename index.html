@@ -3922,6 +3922,10 @@ function syncCopy(btn,text){
   else prompt('コピーしてください',text);
 }
 function syncLink(){return location.origin+location.pathname+'#sync='+fmtCode(SYNC.code)}
+// 並び順に依らない文字列化（内容が同じかどうかの比較に使う）
+function canon(o){if(Array.isArray(o))return'['+o.map(canon).join(',')+']';if(o&&typeof o==='object')return'{'+Object.keys(o).sort().map(function(k){return JSON.stringify(k)+':'+canon(o[k])}).join(',')+'}';return JSON.stringify(o)}
+function localCount(){var n=0,id;for(id in store.cards)n++;for(id in store.gr.cards)n++;return n}
+function openedAs(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone?'ホーム画面のアプリ':'ブラウザ'}
 function syncStatus(){
   if(SYNC.state==='run')return['run','同期中'];
   if(SYNC.state==='err')return['err',SYNC.err+(SYNC.at?' ∧ 前回 '+hhmm(SYNC.at):'')];
@@ -3940,6 +3944,7 @@ function renderSyncState(){
       +'<div class="join"><input id="syncIn" class="search code-in" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="同期コード">'
       +'<button class="b-main" onclick="syncJoin($(\'syncIn\').value)">繋ぐ</button></div>'
       +'<span class="sync-err">'+(SYNC.state==='err'?esc(SYNC.err):'')+'</span></div></div>'
+      +'<p class="note">この端末は記録 '+fmt(localCount())+' 語 ∧ '+openedAs()+'で開いている。ホーム画面のアプリとブラウザ、別のアプリ内のブラウザは、それぞれ記録の置き場所が別になる。普段学習している開き方で繋ぐこと。</p>'
       +'<p class="note">同じコードを入れた端末どうしで、学習の進捗・設定・速読の記録が揃う。この端末の進捗は、繋いだときに同期先の進捗と合わせられ、どちらも失われない。</p>';
     return;
   }
@@ -3947,6 +3952,7 @@ function renderSyncState(){
   var code=fmtCode(SYNC.code),shown=SYNC.show?code:'••••-••••-…-'+code.slice(-4);
   box.innerHTML='<div class="fields">'
     +'<div class="field"><span>状態</span><span class="sync-v"><i class="sync-dot '+st0[0]+'"></i>'+esc(st0[1])+'</span></div>'
+    +'<div class="field"><span>この端末</span><span class="sync-v">記録 '+fmt(localCount())+' 語 ∧ '+openedAs()+'</span></div>'
     +'<div class="field col"><span>コード</span><span class="code-row"><span class="code">'+shown+'</span><button class="b-row" onclick="SYNC.show=!SYNC.show;renderSyncState()">'+(SYNC.show?'伏せる':'表示')+'</button></span></div></div>'
     +'<div class="actions">'
     +'<button class="b2" onclick="syncNow(true)">今すぐ同期する</button>'
@@ -3960,6 +3966,26 @@ document.addEventListener('visibilitychange',function(){
   else if(Date.now()-SYNC.at>60000)syncNow(false);
 });
 window.addEventListener('online',function(){if(SYNC.code)syncNow(false)});
+// 開いたまま表示し続けている端末（PC など）も、他の端末の学習を取りに行く
+setInterval(function(){if(SYNC.code&&document.visibilityState==='visible'&&Date.now()-SYNC.at>=85000)syncNow(false)},90000);
+window.addEventListener('focus',function(){if(SYNC.code&&Date.now()-SYNC.at>30000)syncNow(false)});
+window.addEventListener('pageshow',function(e){if(e.persisted&&SYNC.code)syncNow(false)});
+// 同じ端末の別のタブが書いた記録を取り込む（丸ごと上書きで失わないよう、併合して持つ）
+window.addEventListener('storage',function(e){
+  if(e.key===SYNC_KEY){try{var v=JSON.parse(e.newValue||'null');var c=v&&v.code||'';if(c!==SYNC.code){SYNC.code=c;SYNC.last=0;SYNC.at=+(v&&v.at)||0;renderSyncState()}}catch(x){}return}
+  if(e.key!==KEY||!e.newValue)return;
+  try{
+    var other=JSON.parse(e.newValue);if(!other||!other.cards)return;
+    var mine=extractDoc(0),theirs={cards:other.cards,del:other.del,gcards:other.gr&&other.gr.cards,gdel:other.gr&&other.gr.del,
+      set:{t:+other.setT||0,npd:other.cfg.npd,mode:other.cfg.mode,tts:other.cfg.tts,lv:other.cfg.lv,glv:other.gr&&other.gr.lv,gcat:other.gr&&other.gr.cat},
+      reads:other.read&&other.read.attempts};
+    var merged=syncMerge(mine,theirs),before=canon(syncMerge(mine,{}));
+    absorbDoc(merged);
+    var now=canon(syncMerge(extractDoc(0),{}));
+    if(now!==canon(syncMerge(theirs,{})))saveLocal();   // 相手に無い分があるときだけ書き戻す（同じなら書かず、往復を止める）
+    if(now!==before)afterSync();
+  }catch(x){}
+});
 // ---------- faces ----------
 // 面の頭の高さを測り、速読の計時帯をその直下に留める
 function measureHead(){document.documentElement.style.setProperty('--head-h',$('hdr').offsetHeight+'px')}
