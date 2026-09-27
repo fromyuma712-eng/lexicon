@@ -72,6 +72,11 @@ async function load(path) {
   if (!r) return null;
   return { doc: JSON.parse(await new Response(r.stream).text()), etag: r.blob.etag };
 }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// 版の不一致（412）と、別の書き込みが進行中の衝突（409）はどちらも再試行してよい
+function isConflict(e) {
+  return e instanceof BlobPreconditionFailedError || /conditional request|conflicting operation/i.test(String(e && e.message));
+}
 const OPTS = { access: 'private', addRandomSuffix: false, contentType: 'application/json' };
 
 export async function POST(request) {
@@ -96,7 +101,9 @@ async function handle(request) {
   }
 
   const incoming = clean(body.doc);
-  for (let i = 0; i < 4; i++) {
+  // 同時に来た書き込みとぶつかったら、少し間を置いて読み直す（間隔は伸ばし、揺らぎを入れて再衝突を避ける）
+  for (let i = 0; i < 8; i++) {
+    if (i) await sleep(Math.min(1500, 120 * 2 ** (i - 1)) * (0.5 + Math.random()));
     const cur = await load(path);
     if (!cur) return json({ error: 'not found' }, 404);
     const merged = syncMerge(cur.doc, incoming);
@@ -106,7 +113,7 @@ async function handle(request) {
       await put(path, text, { ...OPTS, allowOverwrite: true, ifMatch: cur.etag });
       return json({ doc: merged });
     } catch (e) {
-      if (e instanceof BlobPreconditionFailedError) continue;
+      if (isConflict(e)) { console.warn('sync-conflict', i, cur.etag, e.name, String(e.message).slice(0, 120)); continue; }
       throw e;
     }
   }

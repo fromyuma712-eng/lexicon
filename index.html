@@ -3888,18 +3888,26 @@ function syncNow(full,keepalive){
   .then(function(j){
     absorbDoc(syncMerge(extractDoc(0),j.doc));   // 送っている間に触れた分も失わない
     saveLocal();
-    SYNC.last=mark;SYNC.at=Date.now();SYNC.state='ok';SYNC.err='';
+    SYNC.last=mark;SYNC.at=Date.now();SYNC.state='ok';SYNC.err='';SYNC.retry=0;
     if(SYNC.dirtyAt<=mark)SYNC.dirty=false;
     syncSaveMeta();afterSync();
   })
   .catch(function(e){
+    // 混み合い・一時的な不調・電波の途切れは、数秒おいて自動で再試行する（3 回まで）
+    var transient=!e.status||e.status===409||e.status>=500;
+    if(transient&&SYNC.code&&(SYNC.retry||0)<3){
+      SYNC.retry=(SYNC.retry||0)+1;SYNC.state='wait';
+      setTimeout(function(){syncNow(full,false)},(2000+Math.random()*3000)*SYNC.retry);
+      return;
+    }
+    SYNC.retry=0;
     SYNC.state='err';
     if(e.status===404){SYNC.err='このコードの同期先は見つからない';if(SYNC.joining){SYNC.code='';SYNC.last=0;syncSaveMeta()}}
     else if(e.status===400)SYNC.err='コードの形が違う';
     else SYNC.err=e.status?'同期先が応じない（'+e.message+'）':'繋がらない';
   })
   .then(function(){
-    SYNC.busy=false;SYNC.joining=false;
+    SYNC.busy=false;if(SYNC.state!=='wait')SYNC.joining=false;
     if(SYNC.code&&SYNC.dirty&&SYNC.state==='ok')syncDirty();
     renderSyncState();
   });
@@ -3928,6 +3936,7 @@ function localCount(){var n=0,id;for(id in store.cards)n++;for(id in store.gr.ca
 function openedAs(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone?'ホーム画面のアプリ':'ブラウザ'}
 function syncStatus(){
   if(SYNC.state==='run')return['run','同期中'];
+  if(SYNC.state==='wait')return['run','同期先が混み合っている ∧ 数秒後に再び試す'];
   if(SYNC.state==='err')return['err',SYNC.err+(SYNC.at?' ∧ 前回 '+hhmm(SYNC.at):'')];
   if(SYNC.at)return['ok',(SYNC.dirty?'未送信の変更あり ∧ ':'')+'同期 '+hhmm(SYNC.at)];
   return['ok','まだ同期していない'];
