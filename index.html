@@ -3242,6 +3242,34 @@ if(!store.gr.del)store.gr.del={};
 if(!store.setT)store.setT=0;
 }
 normalizeStore();
+// 一度きりの移行：同期版より前に今日学んだ語には「初めて学んだ時刻 f」が無く、他の端末で今日の新規数に数えられない。
+// 旧カウンタ（その端末で今日学んだ語数）の分だけ、今日学んだと推せる語に f を補い、時刻 t を付けて同期先へ送る
+function migrateFirstSeen(){
+  if(store.migF)return false;
+  store.migF=1;
+  var s0=sod(),now=Date.now(),changed=false;
+  function fill(map,prefix,quota){
+    if(!(quota>0))return;
+    var have=0,cand=[[],[],[]],id,c;
+    for(id in map){c=map[id];if(id.indexOf(prefix)!==0||!c)continue;
+      if(c.f>=s0){have++;continue}
+      if(c.f||c.t||!c.rep)continue;
+      var last=(c.s===2&&c.due&&c.iv)?c.due-c.iv*DAY:0;          // 最後に採点した時刻（期日−間隔）
+      if(c.s===2){if(last>=s0)cand[0].push([id,last])}
+      else if(c.s===1)cand[1].push([id,0]);
+      else if(c.s===3)cand[2].push([id,0]);
+    }
+    var left=quota-have;
+    cand[0].concat(cand[1],cand[2]).forEach(function(x){
+      if(left<=0)return;
+      map[x[0]].f=x[1]||now;map[x[0]].t=now;left--;changed=true;
+    });
+  }
+  if(store.day.d===todayStr())DKEYS.forEach(function(k){fill(store.cards,k+':',store.day.n[k])});
+  if(store.gr.day.d===todayStr())fill(store.gr.cards,'',store.gr.day.n);
+  return changed;
+}
+var MIGRATED=migrateFirstSeen();
 function saveLocal(){lsSet(KEY,JSON.stringify(store))}
 function save(){saveLocal();syncDirty()}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
@@ -4037,6 +4065,7 @@ showFace(0);
   var m=location.hash.match(/sync=([A-Za-z2-7-]+)/);
   if(m){history.replaceState(null,'',location.pathname+location.search);
     if(syncUsable()&&normCode(m[1])!==SYNC.code){syncJoin(m[1]);showFace(4);return}}
+  if(MIGRATED)saveLocal();
   if(SYNC.code)syncNow(true);
 })();
 </script>
