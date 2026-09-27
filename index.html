@@ -204,6 +204,21 @@ font-size:var(--note);color:var(--paper)}
 .tog.off{color:var(--faint);border-style:dashed}
 .tog.off::before{background:transparent;border-color:var(--faint)}
 select.full{width:100%;max-width:none;margin-bottom:12px}
+/* 同期 */
+.join{display:flex;gap:8px}
+.join .search{margin:0;min-width:0}
+.code-in{font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.code-in::placeholder{text-transform:none}
+.join .b-main{flex:0 0 auto;min-height:var(--row);padding:0 20px}
+.sync-err{font-size:var(--note);color:var(--ember-text)}
+.sync-err:empty{display:none}
+.sync-v{display:flex;align-items:center;gap:10px;font-size:var(--note);color:var(--muted);text-align:right;min-width:0}
+.sync-dot{width:var(--anchor);height:var(--anchor);background:var(--paper);flex-shrink:0}
+.sync-dot.run{background:var(--ember);animation:beacon 1.5s steps(1,end) infinite}
+.sync-dot.err{background:transparent;border:1px solid var(--ember-text)}
+.code{font-family:var(--mono);font-size:var(--note);letter-spacing:.04em;color:var(--paper);white-space:nowrap}
+.code-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.field>span:first-child{white-space:nowrap}
 
 /* ---- 図：面で塗らない。棒は細い罫で立て、軸は L 字、刻みは 1・2・2.5・5・10 の倍数 ---- */
 .bars{display:grid;grid-template-columns:4.5em minmax(0,1fr) 3.5em;column-gap:12px}
@@ -365,6 +380,8 @@ transition:background-color .2s ease,border-color .2s ease,width .2s var(--out)}
     <label class="field"><span>答えを出したときに自動で発音する</span><input type="checkbox" id="cTts"></label>
     <div class="field col"><span class="field-k">出題レベル<span class="lab" id="cLvlDeck"></span></span><div class="lvlbar" id="cLvls"></div></div>
   </div>
+  <div class="sec"><i class="anc"></i><span class="tag">SYNC</span><span class="sec-name">同期</span><i class="sec-rule"></i><span class="sec-meta" id="syncMeta"></span></div>
+  <div id="syncBox"></div>
   <div class="sec"><i class="anc"></i><span class="tag">DATA</span><span class="sec-name">データ</span><i class="sec-rule"></i></div>
   <div class="actions">
     <button class="b2" id="bExp">進捗をJSONで書き出す</button>
@@ -379,7 +396,8 @@ transition:background-color .2s ease,border-color .2s ease,width .2s var(--out)}
     ・<b>仕分け不要</b>：既知の語は「知ってた」の1タップで即除外。正解を重ねた語も自動的に間隔が延びて姿を消す。<br>
     ・<b>想起練習</b>：答えを見る前に必ず思い出す工程を挟む（テスト効果）。<br>
     ・<b>デッキ独立</b>：進捗・レベルの絞り込み・1日の新規語数はデッキごとに独立する。<br>
-    ・進捗はこのブラウザの localStorage に保存される。開き方（同じブラウザ・同じ方法）を固定すること。移行はJSON書き出し→読み込み。
+    ・<b>同期</b>：同期コードで繋いだ端末どうしは、語ごとに新しい方の記録を採って進捗が揃う。消した語は消した時刻で覚え、後から触れた端末の記録だけが生き返る。電波が無くても端末内で学習でき、繋がったときに合わせる。<br>
+    ・進捗は端末内（localStorage）にも保存される。同期を使わない場合は、開き方（同じブラウザ・同じ方法）を固定し、移行はJSON書き出し→読み込みで行う。
   </p>
   <div class="strata">
     <div class="cur"><span class="tag">CURRENT</span>2026-08-28 ／ 6デッキ制（TOEIC・学術・高校・英検2級・関関同立・IT）</div>
@@ -3201,7 +3219,9 @@ var DAY=86400000,KEY='vocabSrsV2';
 var store=null;
 try{store=JSON.parse(lsGet(KEY))}catch(e){}
 function zeroByDeck(){var o={};DKEYS.forEach(function(k){o[k]=0});return o}
+function normalizeStore(){
 if(!store||!store.cards)store={cards:{},cfg:{deck:'t',npd:30,mode:'e2j',tts:true,muted:false,lv:{}},day:{d:'',n:{}}};
+if(!store.cfg)store.cfg={deck:'t',npd:30,mode:'e2j',tts:true,muted:false,lv:{}};
 if(!store.cfg.lv)store.cfg.lv={};
 if(!store.day)store.day={d:'',n:{}};
 if(!store.day.n)store.day.n={};
@@ -3216,7 +3236,14 @@ if(!store.gr.day)store.gr.day={d:'',n:0};
 if(!store.read)store.read={attempts:{}};
 // 保存済みの選択デッキが存在しない場合(公開ビルドで高校デッキを選択中だった等)はTOEICへ戻す
 if(!DECKS[store.cfg.deck])store.cfg.deck='t';
-function save(){lsSet(KEY,JSON.stringify(store))}
+// 同期のための印：語の最終更新時刻 t・初めて学んだ時刻 f・消した語の墓標 del・設定の更新時刻 setT
+if(!store.del)store.del={};
+if(!store.gr.del)store.gr.del={};
+if(!store.setT)store.setT=0;
+}
+normalizeStore();
+function saveLocal(){lsSet(KEY,JSON.stringify(store))}
+function save(){saveLocal();syncDirty()}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
 if(store.day.d!==todayStr()){store.day={d:todayStr(),n:zeroByDeck()};save()}
 if(store.gr.day.d!==todayStr()){store.gr.day={d:todayStr(),n:0};save()}
@@ -3227,6 +3254,10 @@ function newCard(){return{s:0,iv:0,ef:2.5,due:0,rep:0,lap:0}}
 function cardIn(map,id){return map[id]||(map[id]=newCard())}
 function st(id){return cardIn(store.cards,id)}
 function eod(){var d=new Date();d.setHours(23,59,59,999);return d.getTime()}
+function sod(){var d=new Date();d.setHours(0,0,0,0);return d.getTime()}
+function newToday(map,prefix,legacy){var s0=sod(),n=0;for(var id in map){if(id.indexOf(prefix)===0&&map[id]&&map[id].f>=s0)n++}return Math.max(n,legacy||0)}
+function vNew(){return newToday(store.cards,dk()+':',store.day.d===todayStr()?store.day.n[dk()]:0)}
+function gNew(){return newToday(store.gr.cards,'',store.gr.day.d===todayStr()?store.gr.day.n:0)}
 function lvOn(w){return store.cfg.lv[dk()][String(w[5])]!==false}
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}}
 // ---------- 語彙・文法で共通の集計とキュー生成 ----------
@@ -3370,7 +3401,7 @@ function trendFig(att,width){
 }
 // ---------- 計器の列 ----------
 function renderStats(){
-  var t=tally(vPool(),store.cards,cid),n=store.day.n[dk()],cap=store.cfg.npd;
+  var t=tally(vPool(),store.cards,cid),n=vNew(),cap=store.cfg.npd;
   if(!$('iDue')){
     var ticks='';[0,25,50,75,100].forEach(function(p){ticks+='<i style="left:'+p+'%"></i>'});
     $('stats').innerHTML='<div class="inst"><span class="tag">'+LEX.due+'</span><span class="inst-v"><b class="num" id="iDue"></b><span class="unit">語</span></span></div>'
@@ -3385,7 +3416,7 @@ function renderStats(){
 var queue=[],cur=null,flipped=false,sess={done:0,ng:0};
 function vPool(){return D().deck.filter(lvOn)}
 function buildQueue(){
-  queue=makeQueue(vPool(),store.cards,cid,Math.max(0,store.cfg.npd-store.day.n[dk()]));
+  queue=makeQueue(vPool(),store.cards,cid,Math.max(0,store.cfg.npd-vNew()));
   sess={done:0,ng:0};
 }
 function next(){cur=queue.shift()||null;flipped=false;renderStudy()}
@@ -3410,6 +3441,7 @@ function grade(g){
   var c=st(cid(cur)),wasNew=(c.s===0);
   if(wasNew)store.day.n[dk()]++;
   var rq=sm2Apply(c,g,wasNew);
+  c.t=Date.now();if(wasNew)c.f=c.t;
   if(rq)requeue(rq);
   sess.done++;if(g===0)sess.ng++;
   buzz(6);
@@ -3443,6 +3475,7 @@ function gContinue(){
   var c=gCard(gCur[0]),wasNew=(c.s===0);
   if(wasNew)store.gr.day.n++;
   var rq=sm2Apply(c,isCorrect?2:0,wasNew);
+  c.t=Date.now();if(wasNew)c.f=c.t;
   if(rq)gRequeue(rq);
   gSess.done++;if(!isCorrect)gSess.ng++;
   save();gNext();
@@ -3458,13 +3491,13 @@ function gFilterBar(){
   });
   return h+'</div>';
 }
-function gSetCat(c){store.gr.cat=c;save();gRestart()}
-function gTgLv(l){store.gr.lv[String(l)]=gLvOn(l)?false:true;save();gRestart()}
+function gSetCat(c){store.gr.cat=c;store.setT=Date.now();save();gRestart()}
+function gTgLv(l){store.gr.lv[String(l)]=gLvOn(l)?false:true;store.setT=Date.now();save();gRestart()}
 function renderGram(still){
   var v=$('vGram');
   if(!gCur){
     var t=tally(gPool(),store.gr.cards,gKey);
-    v.innerHTML='<div class="card">'+CORNERS+'<div class="card-head"><span class="tag">'+LEX.queue+'</span><span class="card-meta">本日 '+store.gr.day.n+' 問</span></div>'
+    v.innerHTML='<div class="card">'+CORNERS+'<div class="card-head"><span class="tag">'+LEX.queue+'</span><span class="card-meta">本日 '+gNew()+' 問</span></div>'
       +'<p class="done-h">本日の文法キューは空です</p>'
       +(gSess.done?'<p class="done-p">今回 '+gSess.done+' 問 ∧ 誤答 '+gSess.ng+' 問</p>':'')
       +'<div class="btns"><button class="b-main" onclick="gRestart()">キューを組み直す</button></div></div>'
@@ -3473,7 +3506,7 @@ function renderGram(still){
   }
   var q=gCur;
   var h='<div class="card'+(still?' still':'')+'">'+CORNERS
-    +'<div class="card-head"><span class="tag">'+LEX.queue+'</span><span class="card-meta">残り '+(gQueue.length+1)+' 問 ∧ 本日 '+store.gr.day.n+' 問</span></div>'
+    +'<div class="card-head"><span class="tag">'+LEX.queue+'</span><span class="card-meta">残り '+(gQueue.length+1)+' 問 ∧ 本日 '+gNew()+' 問</span></div>'
     +'<div class="gcat">'+esc(q[5])+' ∧ '+q[6]+'点</div>'
     +'<div class="gstem">'+esc(q[1]).replace('___','<span class="blank" role="img" aria-label="空欄"></span>')+'</div><div class="opts">';
   q[2].forEach(function(ch,i){
@@ -3712,8 +3745,8 @@ function renderList(){
     +secHead(LEX.index,'台帳','表示 '+fmt(shown)+' / '+fmt(D().deck.length)+' 語');
   $('rows').innerHTML='<div class="ledger">'+(h||'<p class="empty">該当なし</p>')+'</div>';
 }
-function tgKnown(id){var c=st(id);if(c.s===3){c.s=0;c.iv=0;c.due=0}else{c.s=3}save();renderList();renderStats()}
-function rsCard(id){delete store.cards[id];save();renderList();renderStats()}
+function tgKnown(id){var c=st(id);if(c.s===3){c.s=0;c.iv=0;c.due=0}else{c.s=3}c.t=Date.now();save();renderList();renderStats()}
+function rsCard(id){delete store.cards[id];store.del[id]=Date.now();save();renderList();renderStats()}
 // ---------- settings ----------
 function renderLvls(){
   var h='';
@@ -3724,15 +3757,15 @@ function renderLvls(){
   $('cLvls').innerHTML=h;
   $('cLvlDeck').textContent=D().name;
 }
-function tgLv(l,on){store.cfg.lv[dk()][l]=on;save();renderStats();restart()}
+function tgLv(l,on){store.cfg.lv[dk()][l]=on;store.setT=Date.now();save();renderStats();restart()}
 function loadSet(){
   $('cNpd').value=store.cfg.npd;$('cMode').value=store.cfg.mode;$('cTts').checked=store.cfg.tts;
   renderLvls();
 }
 function bindSet(){
-  $('cNpd').onchange=function(e){store.cfg.npd=Math.max(1,parseInt(e.target.value)||30);save();renderStats();restart()};
-  $('cMode').onchange=function(e){store.cfg.mode=e.target.value;save();renderStudy()};
-  $('cTts').onchange=function(e){store.cfg.tts=e.target.checked;save()};
+  $('cNpd').onchange=function(e){store.cfg.npd=Math.max(1,parseInt(e.target.value)||30);store.setT=Date.now();save();renderStats();restart()};
+  $('cMode').onchange=function(e){store.cfg.mode=e.target.value;store.setT=Date.now();save();renderStudy()};
+  $('cTts').onchange=function(e){store.cfg.tts=e.target.checked;store.setT=Date.now();save()};
   $('bExp').onclick=function(){dl('lexicon-progress.json',JSON.stringify(store),'application/json')};
   $('bCsv').onclick=function(){
     var s='﻿';
@@ -3742,13 +3775,17 @@ function bindSet(){
   $('bImp').onchange=function(e){
     var f=e.target.files[0];if(!f)return;
     var r=new FileReader();
-    r.onload=function(){try{var d=JSON.parse(r.result);if(d&&d.cards){store=d;save();renderDeck();renderStats();restart();loadSet();alert('読み込み完了')}else alert('形式が不正です')}catch(x){alert('読み込み失敗: '+x.message)}};
+    r.onload=function(){try{var d=JSON.parse(r.result);if(d&&d.cards){
+      var keep=store.cfg;store=d;normalizeStore();store.cfg.deck=keep.deck;store.cfg.muted=keep.muted;
+      var now=Date.now();[store.cards,store.gr.cards].forEach(function(m){for(var id in m)m[id].t=now});store.setT=now;
+      save();renderDeck();renderStats();restart();loadSet();syncNow(true);alert('読み込み完了')}else alert('形式が不正です')}catch(x){alert('読み込み失敗: '+x.message)}};
     r.readAsText(f);
   };
   $('bReset').onclick=function(){
     if(!confirm('デッキ「'+D().name+'」の学習進捗を削除します。よろしいですか？'))return;
     var p=dk()+':';
-    Object.keys(store.cards).forEach(function(k){if(k.indexOf(p)===0)delete store.cards[k]});
+    var now=Date.now();
+    Object.keys(store.cards).forEach(function(k){if(k.indexOf(p)===0){delete store.cards[k];store.del[k]=now}});
     store.day.n[dk()]=0;save();renderStats();restart();
   };
 }
@@ -3757,6 +3794,172 @@ function dl(name,content,type){
   a.href=URL.createObjectURL(new Blob([content],{type:type}));
   a.download=name;a.click();URL.revokeObjectURL(a.href);
 }
+// ---------- 同期（同期コードで、どの端末でも同じ進捗を使う） ----------
+// 同期の併合。端末とサーバで同じ関数を使う。可換・結合的・冪等なので、どの順で何度合わせても同じ結果に収まる。
+// 語ごとに「新しい方」を採る（t=最終更新時刻、同時刻なら復習回数・期日の大きい方）。消した語は墓標（del）で覚え、
+// 墓標より後に触れた語だけが生き返る。設定は最後に書いた端末が勝つ。読速の記録は両方を合わせて新しい 20 件を残す。
+function syncMerge(a,b){
+  a=a||{};b=b||{};
+  function newer(x,y){
+    if(!x)return y;if(!y)return x;
+    var k=['t','rep','due','iv','s','lap'];
+    for(var i=0;i<k.length;i++){var p=+x[k[i]]||0,q=+y[k[i]]||0;if(p!==q)return p>q?x:y}
+    return JSON.stringify(x)>=JSON.stringify(y)?x:y;
+  }
+  function cards(ca,da,cb,db){
+    ca=ca||{};da=da||{};cb=cb||{};db=db||{};
+    var oc={},od={},ids={},id;
+    [ca,da,cb,db].forEach(function(m){for(var k in m)ids[k]=1});
+    for(id in ids){
+      var d=Math.max(+da[id]||0,+db[id]||0),c=newer(ca[id],cb[id]);
+      if(c&&(!d||(+c.t||0)>d))oc[id]=c;else if(d)od[id]=d;
+    }
+    return[oc,od];
+  }
+  function later(x,y){
+    if(!x)return y||null;if(!y)return x;
+    var p=+x.t||0,q=+y.t||0;
+    if(p!==q)return p>q?x:y;
+    return JSON.stringify(x)>=JSON.stringify(y)?x:y;
+  }
+  var v=cards(a.cards,a.del,b.cards,b.del),g=cards(a.gcards,a.gdel,b.gcards,b.gdel);
+  var reads={},ra=a.reads||{},rb=b.reads||{};
+  Object.keys(ra).concat(Object.keys(rb)).forEach(function(pid){
+    if(reads[pid])return;
+    var m={};
+    (ra[pid]||[]).concat(rb[pid]||[]).forEach(function(x){if(x&&x.ts&&(!m[x.ts]||JSON.stringify(x)>JSON.stringify(m[x.ts])))m[x.ts]=x});
+    reads[pid]=Object.keys(m).map(Number).sort(function(p,q){return p-q}).slice(-20).map(function(ts){return m[ts]});
+  });
+  return{v:1,cards:v[0],del:v[1],gcards:g[0],gdel:g[1],set:later(a.set,b.set),reads:reads};
+}
+var SYNC_KEY='lexiconSync';
+// last=最後に同期先と揃えた時刻（これより後に触れたものだけを送る）/ at=最後に同期できた時刻
+var SYNC={code:'',last:0,at:0,state:'idle',err:'',busy:false,dirty:false,dirtyAt:0,timer:0,joining:false,show:false};
+try{var sv0=JSON.parse(lsGet(SYNC_KEY)||'null');if(sv0&&sv0.code){SYNC.code=sv0.code;SYNC.last=+sv0.last||0;SYNC.at=+sv0.at||0}}catch(e){}
+function syncSaveMeta(){lsSet(SYNC_KEY,JSON.stringify({code:SYNC.code,last:SYNC.last,at:SYNC.at}))}
+function syncUsable(){return /^https?:$/.test(location.protocol)}
+// 打ち間違えやすい数字は、形の似た字に読み替える（コードの字は A〜Z と 2〜7 だけ）
+function normCode(x){return String(x||'').toUpperCase().replace(/0/g,'O').replace(/1/g,'I').replace(/8/g,'B').replace(/[^A-Z2-7]/g,'')}
+function fmtCode(c){return c.replace(/(.{4})(?=.)/g,'$1-')}
+function hhmm(ms){var d=new Date(ms),p=function(n){return(n<10?'0':'')+n};
+  return(d.toDateString()===new Date().toDateString()?'':(d.getMonth()+1)+'/'+d.getDate()+' ')+p(d.getHours())+':'+p(d.getMinutes())}
+function syncDirty(){
+  if(!SYNC||!SYNC.code)return;
+  SYNC.dirty=true;SYNC.dirtyAt=Date.now();
+  clearTimeout(SYNC.timer);SYNC.timer=setTimeout(function(){syncNow(false)},20000);
+  renderSyncState();
+}
+// 送る文書を作る。since より後に触れたものだけを入れる（0 なら全部）。デッキの選択と消音は端末ごとに持つ
+function extractDoc(since){
+  function pick(m){var o={};for(var id in m)if(!since||(+m[id].t||0)>=since)o[id]=m[id];return o}
+  function pickT(m){var o={};for(var id in m)if(!since||m[id]>=since)o[id]=m[id];return o}
+  var reads={},ra=store.read.attempts;
+  for(var pid in ra){var a=ra[pid].filter(function(x){return !since||x.ts>=since});if(a.length)reads[pid]=a}
+  return{v:1,cards:pick(store.cards),del:pickT(store.del),gcards:pick(store.gr.cards),gdel:pickT(store.gr.del),
+    set:(!since||store.setT>=since)?{t:store.setT,npd:store.cfg.npd,mode:store.cfg.mode,tts:store.cfg.tts,lv:store.cfg.lv,glv:store.gr.lv,gcat:store.gr.cat}:null,
+    reads:reads};
+}
+function absorbDoc(d){
+  store.cards=d.cards||{};store.del=d.del||{};
+  store.gr.cards=d.gcards||{};store.gr.del=d.gdel||{};
+  var x=d.set;
+  if(x){store.setT=+x.t||0;
+    if(x.npd)store.cfg.npd=x.npd;if(x.mode)store.cfg.mode=x.mode;if(typeof x.tts==='boolean')store.cfg.tts=x.tts;
+    if(x.lv)store.cfg.lv=x.lv;if(x.glv)store.gr.lv=x.glv;if(x.gcat)store.gr.cat=x.gcat}
+  DKEYS.forEach(function(k){if(!store.cfg.lv[k])store.cfg.lv[k]={}});
+  store.read.attempts=d.reads||{};
+}
+// 同期の後、まだ手を付けていない面だけを組み直す（めくっている途中の札は替えない）
+function afterSync(){
+  renderStats();
+  if(!cur||(sess.done===0&&!flipped))restart();
+  if(!gCur||(gSess.done===0&&!gAnswered))gRestart();
+  if(!$('vList').classList.contains('hide'))renderList();
+  if(!$('vSet').classList.contains('hide'))loadSet();
+}
+function syncNow(full,keepalive){
+  if(!SYNC.code||!syncUsable()||SYNC.busy)return;
+  var mark=Date.now(),body=JSON.stringify({op:'sync',code:SYNC.code,doc:extractDoc(full?0:SYNC.last)});
+  SYNC.busy=true;SYNC.state='run';clearTimeout(SYNC.timer);renderSyncState();
+  fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json'},body:body,cache:'no-store',
+    keepalive:!!keepalive&&body.length<60000})
+  .then(function(r){return r.json().catch(function(){return{}}).then(function(j){
+    if(!r.ok){var e=new Error(j.error||('HTTP '+r.status));e.status=r.status;throw e}return j})})
+  .then(function(j){
+    absorbDoc(syncMerge(extractDoc(0),j.doc));   // 送っている間に触れた分も失わない
+    saveLocal();
+    SYNC.last=mark;SYNC.at=Date.now();SYNC.state='ok';SYNC.err='';
+    if(SYNC.dirtyAt<=mark)SYNC.dirty=false;
+    syncSaveMeta();afterSync();
+  })
+  .catch(function(e){
+    SYNC.state='err';
+    if(e.status===404){SYNC.err='このコードの同期先は見つからない';if(SYNC.joining){SYNC.code='';SYNC.last=0;syncSaveMeta()}}
+    else if(e.status===400)SYNC.err='コードの形が違う';
+    else SYNC.err=e.status?'同期先が応じない（'+e.message+'）':'繋がらない';
+  })
+  .then(function(){
+    SYNC.busy=false;SYNC.joining=false;
+    if(SYNC.code&&SYNC.dirty&&SYNC.state==='ok')syncDirty();
+    renderSyncState();
+  });
+}
+function syncJoin(raw){
+  var c=normCode(raw);
+  if(c.length!==24){SYNC.state='err';SYNC.err='コードは 24 文字（A〜Z と 2〜7）';renderSyncState();return}
+  if(SYNC.code&&SYNC.code!==c&&!confirm('いま繋いでいる同期先から、別のコードの同期先へ繋ぎ替えます。よろしいですか？'))return;
+  SYNC.code=c;SYNC.last=0;SYNC.at=0;SYNC.joining=true;SYNC.err='';syncSaveMeta();
+  syncNow(true);   // 初回は端末にある進捗を全部送り、同期先の進捗と合わせる
+}
+function syncLeave(){
+  if(!confirm('この端末の同期を解きます。端末内の進捗はそのまま残ります。よろしいですか？'))return;
+  SYNC.code='';SYNC.last=0;SYNC.at=0;SYNC.state='idle';SYNC.err='';SYNC.dirty=false;SYNC.show=false;
+  clearTimeout(SYNC.timer);syncSaveMeta();renderSyncState();
+}
+function syncCopy(btn,text){
+  var done=function(){var t=btn.firstChild.nodeValue;btn.firstChild.nodeValue='コピーした';setTimeout(function(){btn.firstChild.nodeValue=t},1600)};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,function(){prompt('コピーしてください',text)});
+  else prompt('コピーしてください',text);
+}
+function syncLink(){return location.origin+location.pathname+'#sync='+fmtCode(SYNC.code)}
+function syncStatus(){
+  if(SYNC.state==='run')return['run','同期中'];
+  if(SYNC.state==='err')return['err',SYNC.err+(SYNC.at?' ∧ 前回 '+hhmm(SYNC.at):'')];
+  if(SYNC.at)return['ok',(SYNC.dirty?'未送信の変更あり ∧ ':'')+'同期 '+hhmm(SYNC.at)];
+  return['ok','まだ同期していない'];
+}
+function renderSyncState(){
+  var box=$('syncBox');if(!box)return;
+  var meta=$('syncMeta');
+  if(!syncUsable()){meta.textContent='';box.innerHTML='<p class="note">この版は端末の中だけで使う。端末をまたぐ同期は公開版で使う。</p>';return}
+  var st0=syncStatus();
+  if(!SYNC.code){
+    meta.textContent='この端末は未接続';
+    if($('syncIn'))return box.querySelector('.sync-err')&&(box.querySelector('.sync-err').textContent=SYNC.state==='err'?SYNC.err:'');
+    box.innerHTML='<div class="fields"><div class="field col"><span>同期コード</span>'
+      +'<div class="join"><input id="syncIn" class="search code-in" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="同期コード">'
+      +'<button class="b-main" onclick="syncJoin($(\'syncIn\').value)">繋ぐ</button></div>'
+      +'<span class="sync-err">'+(SYNC.state==='err'?esc(SYNC.err):'')+'</span></div></div>'
+      +'<p class="note">同じコードを入れた端末どうしで、学習の進捗・設定・速読の記録が揃う。この端末の進捗は、繋いだときに同期先の進捗と合わせられ、どちらも失われない。</p>';
+    return;
+  }
+  meta.textContent=st0[0]==='run'?'同期中':'接続中';
+  var code=fmtCode(SYNC.code),shown=SYNC.show?code:'••••-••••-…-'+code.slice(-4);
+  box.innerHTML='<div class="fields">'
+    +'<div class="field"><span>状態</span><span class="sync-v"><i class="sync-dot '+st0[0]+'"></i>'+esc(st0[1])+'</span></div>'
+    +'<div class="field col"><span>コード</span><span class="code-row"><span class="code">'+shown+'</span><button class="b-row" onclick="SYNC.show=!SYNC.show;renderSyncState()">'+(SYNC.show?'伏せる':'表示')+'</button></span></div></div>'
+    +'<div class="actions">'
+    +'<button class="b2" onclick="syncNow(true)">今すぐ同期する</button>'
+    +'<button class="b2" onclick="syncCopy(this,syncLink())">別の端末に繋ぐリンクをコピーする</button>'
+    +'<button class="b2 danger" onclick="syncLeave()">この端末の同期を解く</button></div>'
+    +'<p class="note">コードを知る人は誰でもこの進捗を読み書きできる。人に見せない。</p>';
+}
+document.addEventListener('visibilitychange',function(){
+  if(!SYNC.code)return;
+  if(document.visibilityState==='hidden'){if(SYNC.dirty)syncNow(false,true)}
+  else if(Date.now()-SYNC.at>60000)syncNow(false);
+});
+window.addEventListener('online',function(){if(SYNC.code)syncNow(false)});
 // ---------- faces ----------
 // 面の頭の高さを測り、速読の計時帯をその直下に留める
 function measureHead(){document.documentElement.style.setProperty('--head-h',$('hdr').offsetHeight+'px')}
@@ -3773,7 +3976,7 @@ function showFace(i){
   $('faceChar').textContent=f.ch;
   measureHead();
   if(f.view==='vList')renderList();
-  if(f.view==='vSet')loadSet();
+  if(f.view==='vSet'){loadSet();renderSyncState()}
   if(f.view==='vGram')renderGram();
   if(f.view==='vRead')renderRead();
 }
@@ -3795,6 +3998,12 @@ renderMuteBtn();
 bindSet();renderDeck();renderStats();buildQueue();next();
 gBuildQueue();gNext();
 showFace(0);
+(function(){
+  var m=location.hash.match(/sync=([A-Za-z2-7-]+)/);
+  if(m){history.replaceState(null,'',location.pathname+location.search);
+    if(syncUsable()&&normCode(m[1])!==SYNC.code){syncJoin(m[1]);showFace(4);return}}
+  if(SYNC.code)syncNow(true);
+})();
 </script>
 </body>
 </html>
