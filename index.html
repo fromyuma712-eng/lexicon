@@ -279,6 +279,10 @@ border:1px solid var(--line);text-align:left;font-size:var(--body);line-height:1
 .qopt.wrong .opt-t{color:var(--faint);text-decoration:line-through}
 .qopt.wrong .verdict{color:var(--faint)}
 .qex{margin-top:16px;padding:2px 0 2px 14px;border-left:1px solid var(--line-strong);font-size:var(--note);color:var(--muted);line-height:1.75}
+.practice-note{font-size:var(--note);line-height:1.85;color:var(--muted);max-width:43em;margin:12px 0 20px}
+.listen-actions{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0}
+.listen-actions .b-sub{min-height:44px}
+.transcript{white-space:pre-wrap;font-size:var(--body);line-height:1.85;margin-top:16px}
 
 /* 速読：計時は今まさに動いているので燠火。秒の線が一分をかけて左から右へ伸びる */
 .runbar{position:sticky;top:var(--head-h);z-index:5;background:var(--ground)}
@@ -343,7 +347,7 @@ transition:background-color .2s ease,border-color .2s ease,width .2s var(--out)}
 <header id="hdr">
   <div class="band"></div><span class="beacon" aria-hidden="true"></span>
   <div class="head">
-    <div class="plate"><span class="tag brand">LEXICON</span><span class="tag" id="faceTag">STUDY ∧ 01/05</span></div>
+    <div class="plate"><span class="tag brand">LEXICON</span><span class="tag" id="faceTag">STUDY ∧ 01/06</span></div>
     <span class="character" id="faceChar">めくる</span>
     <button id="muteBtn" class="icon-btn" aria-label="音声のオン/オフ" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.75 7.25h3.5l4.5-3.75v13l-4.5-3.75h-3.5z"/><path class="wave" d="M13.25 7.25a3.9 3.9 0 0 1 0 5.5M15.75 4.75a7.4 7.4 0 0 1 0 10.5"/><path class="x" d="M13 7.5l5 5M18 7.5l-5 5"/></svg></button>
   </div>
@@ -354,6 +358,7 @@ transition:background-color .2s ease,border-color .2s ease,width .2s var(--out)}
 <nav id="bottomNav"><div class="navin">
   <button id="tabStudy" class="on"><span class="tag">STUDY</span><span class="nav-name">学習</span></button>
   <button id="tabGram"><span class="tag">GRAMMAR</span><span class="nav-name">文法</span></button>
+  <button id="tabListen"><span class="tag">LISTEN</span><span class="nav-name">聴解</span></button>
   <button id="tabRead"><span class="tag">READING</span><span class="nav-name">速読</span></button>
   <button id="tabList"><span class="tag">INDEX</span><span class="nav-name">一覧</span></button>
   <button id="tabSet"><span class="tag">CONFIG</span><span class="nav-name">設定</span></button>
@@ -361,6 +366,7 @@ transition:background-color .2s ease,border-color .2s ease,width .2s var(--out)}
 
 <main id="vStudy"></main>
 <main id="vGram" class="hide"></main>
+<main id="vListen" class="hide"></main>
 <main id="vRead" class="hide"></main>
 <main id="vList" class="hide">
   <div id="listHead"></div>
@@ -3177,14 +3183,74 @@ qs:[
 {q:"When will training sessions be held?",ch:["The first week of January","The last week of December","Every Monday","Only upon request"],a:1,ex:"'held during the last week of December'とある。"}
 ]},
 {id:"r06",title:"Conference Schedule Change Notice",level:990,genre:"schedule",
-body:"Due to an unforeseen scheduling conflict with the venue, the opening keynote of the Annual Business Leadership Conference has been moved from 9:00 A.M. to 10:30 A.M. on the first day. As a result, the morning breakout sessions originally scheduled for 10:00 A.M. have been consolidated into a single 90-minute block beginning at noon, and attendees who registered for two separate morning sessions will automatically be enrolled in both halves of the combined block. The afternoon schedule, including the networking luncheon at 1:00 P.M. and the panel discussion at 3:00 P.M., remains unchanged. Attendees who booked travel based on the original 9:00 A.M. keynote start time are encouraged to contact the conference organizers regarding possible refunds for early check-in fees. Updated printed schedules will be available at the registration desk beginning tomorrow morning, and the mobile app will reflect all changes by end of day today. We apologize for any inconvenience this change may cause and appreciate attendees' flexibility.",
+body:"Due to an unforeseen scheduling conflict with the venue, the opening keynote of the Annual Business Leadership Conference has been moved from 9:00 A.M. to 10:30 A.M. on the first day. As a result, the morning breakout sessions originally scheduled for 10:00 A.M. have been consolidated into a single 90-minute block beginning at noon, and attendees who registered for two separate morning sessions will automatically be enrolled in both halves of the combined block. The afternoon schedule, including the networking luncheon at 1:30 P.M. and the panel discussion at 3:00 P.M., remains unchanged. Attendees who booked travel based on the original 9:00 A.M. keynote start time are encouraged to contact the conference organizers regarding possible refunds for early check-in fees. Updated printed schedules will be available at the registration desk beginning tomorrow morning, and the mobile app will reflect all changes by end of day today. We apologize for any inconvenience this change may cause and appreciate attendees' flexibility.",
 qs:[
 {q:"Why was the keynote rescheduled?",ch:["Low attendance","A venue scheduling conflict","Speaker cancellation","Weather conditions"],a:1,ex:"'Due to an unforeseen scheduling conflict with the venue'とある。"},
 {q:"What happened to the original 10:00 A.M. breakout sessions?",ch:["They were cancelled entirely","They were combined into one 90-minute block at noon","They were moved to the following day","They were replaced by the keynote"],a:1,ex:"'consolidated into a single 90-minute block beginning at noon'とある。"},
 {q:"Which part of the afternoon schedule remains unchanged?",ch:["The keynote","The breakout sessions","The networking luncheon and panel discussion","The registration process"],a:2,ex:"'The afternoon schedule, including the networking luncheon...and the panel discussion...remains unchanged'とある。"},
 {q:"What should attendees who booked travel around the original keynote time do?",ch:["Cancel their registration","Contact organizers about possible refunds","Attend a different conference","Wait for a new printed schedule"],a:1,ex:"'encouraged to contact the conference organizers regarding possible refunds'とある。"}
 ]},
+{id:"r07",title:"Printer Delivery and Training",level:600,genre:"email + notice",focus:"情報照合",
+body:"DOCUMENT 1 — Supplier email\nTo: Ms. Park\nSubject: Printer delivery\n\nThe new printers will arrive on Tuesday morning. Our technician can install them that afternoon, but the training session cannot begin until all five machines are connected to the office network. Please ask your IT team to have network ports ready before noon.\n\nDOCUMENT 2 — Internal notice\nThe printer training originally planned for Tuesday at 3 P.M. has moved to Wednesday at 10 A.M. in Room B. Staff may continue using the old printers until training is complete. Please bring a sample document that you would like to print.",
+qs:[
+{q:"When is the training now scheduled?",ch:["Tuesday morning","Tuesday at 3 P.M.","Wednesday at 10 A.M.","Wednesday at 3 P.M."],a:2,skill:"照合",ex:"社内通知の変更後の日時は Wednesday at 10 A.M.。古い日時は選ばない。"},
+{q:"What needs to happen before training can begin?",ch:["The old printers must be removed","Five machines must be connected to the network","Every employee must submit a document","The technician must return on Wednesday"],a:1,skill:"照合",ex:"取引先メールに all five machines are connected to the office network とある。"},
+{q:"What can employees reasonably do on Tuesday morning?",ch:["Attend the training","Use the old printers","Pick up the new printers in Room B","Ask the technician to teach the class"],a:1,skill:"推測",ex:"社内通知では training is complete まで旧プリンターを使用できる。火曜朝は研修前。"},
+{q:"Why were IT staff asked to prepare network ports before noon?",ch:["To support the afternoon installation","To move the training to Tuesday","To order more printers","To replace the sample documents"],a:0,skill:"推測",ex:"火曜午後に設置するため、先にネットワーク端子の準備が必要と読み取れる。"}
+]},
+{id:"r08",title:"Workshop Registration Update",level:730,genre:"schedule + email",focus:"変更の追跡",
+body:"DOCUMENT 1 — Workshop schedule\nThursday, May 21\n9:00–10:00  Customer interviews — Room 2\n10:15–11:15  Survey design — Room 2\n11:30–12:15  Product demonstration — Hall A\n\nDOCUMENT 2 — Email from the organizer\nDue to a maintenance issue, Room 2 will be unavailable on Thursday. The first two sessions will take place in Room 5 at their original times. The product demonstration will still be in Hall A, but it will start fifteen minutes later so participants can walk from Room 5. Registration closes at 5 P.M. on Wednesday. Anyone who registered before Monday will receive an updated calendar invitation automatically.",
+qs:[
+{q:"Where will the survey design session take place?",ch:["Room 2","Room 5","Hall A","Online"],a:1,skill:"照合",ex:"元の表は Room 2 だが、メールで最初の2講座が Room 5 に変更された。"},
+{q:"At what time will the product demonstration begin?",ch:["10:15","11:15","11:30","11:45"],a:3,skill:"照合",ex:"元の開始11:30に15分を加えると11:45。"},
+{q:"Why was the demonstration delayed?",ch:["The presenter is unavailable","Participants need time to move between rooms","Registration will stay open longer","The hall requires maintenance"],a:1,skill:"推測",ex:"メールには Room 5 から歩く時間を確保するためとある。"},
+{q:"Who will receive a revised calendar invitation without taking action?",ch:["Everyone who attends","Those who registered before Monday","Only the presenters","Those who register on Thursday"],a:1,skill:"詳細",ex:"Anyone who registered before Monday と明記されている。"}
+]},
+{id:"r09",title:"Travel Claim and Policy",level:730,genre:"policy + email",focus:"条件と例外",
+body:"DOCUMENT 1 — Travel policy\nEmployees may claim the cost of a standard train ticket for approved business trips. A first-class ticket is reimbursable only when the journey exceeds four hours and a manager has approved the upgrade in advance. Taxi fares are covered when public transportation is unavailable after 10 P.M. Submit receipts within ten business days after returning.\n\nDOCUMENT 2 — Email\nHi Finance,\nI returned from the approved client visit on Monday. The train journey took five hours. I purchased a first-class ticket because I needed to work during the trip, but I did not request approval for the upgrade beforehand. I also took a taxi from the station at 9:30 P.M. because it was raining. I have receipts for both expenses.\nThanks,\nElena",
+qs:[
+{q:"Which part of Elena's train fare is clearly covered?",ch:["The entire first-class fare","The standard-ticket amount","No part of the fare","Only the booking fee"],a:1,skill:"推測",ex:"移動は承認済みの出張として扱い、標準席は対象。上位席の差額は事前承認がないため対象外。"},
+{q:"Why is the first-class upgrade not covered?",ch:["The trip was too short","She did not keep a receipt","She did not obtain advance approval","She traveled on Monday"],a:2,skill:"照合",ex:"5時間という条件は満たすが、事前の管理職承認を得ていない。"},
+{q:"What does the policy suggest about the taxi fare?",ch:["It is covered because it rained","It is covered because the train took five hours","It is not covered under the stated exception","It is covered only with a manager's signature"],a:2,skill:"推測",ex:"タクシーの例外は公共交通が22時以降使えない場合。9:30 P.M. の雨は規定の条件に当たらない。"},
+{q:"What must Elena do within ten business days?",ch:["Request the upgrade","Submit the receipts","Book a return trip","Meet the client again"],a:1,skill:"詳細",ex:"帰着後10営業日以内に領収書を提出する規定。"}
+]},
+{id:"r10",title:"Library Renovation Services",level:600,genre:"notice + message",focus:"目的の推測",
+body:"DOCUMENT 1 — Public notice\nThe East Branch library will close from June 3 through June 14 while new lighting is installed. Books due during this period will be renewed automatically until June 21. The West Branch will remain open on its regular schedule. Reserved books already waiting at the East Branch may be collected there until June 2; after that date they will be transferred to the West Branch.\n\nDOCUMENT 2 — Message from a librarian\nA reader asked whether the book she reserved yesterday would be available at the West Branch tomorrow. I told her that new reservations are processed in the usual way and that only books already waiting at the East Branch will be moved after June 2. She can check her account for a pickup notice.",
+qs:[
+{q:"What is the main reason for the East Branch closure?",ch:["A staff meeting","Lighting work","A book sale","A change in opening hours"],a:1,skill:"目的",ex:"お知らせの冒頭に new lighting is installed とある。"},
+{q:"When will books due during the closure become due?",ch:["June 2","June 3","June 14","June 21"],a:3,skill:"詳細",ex:"閉館中に返却期限が来る本は June 21 まで自動延長される。"},
+{q:"Can the reader assume her new reservation will be at the West Branch tomorrow?",ch:["Yes, all reservations move immediately","Yes, but only if she calls","No, she must wait for a pickup notice","No, reservations are canceled"],a:2,skill:"推測",ex:"移送対象はすでに東館で受取待ちの本だけ。新規予約は通常処理され、受取通知の確認が必要。"},
+{q:"Where can a reader collect a book already waiting at the East Branch on June 1?",ch:["At the East Branch","At the West Branch","By mail","At either branch"],a:0,skill:"照合",ex:"東館で受取待ちの本は6月2日まで東館で受け取れる。"}
+]},
 /*@R@*/];
+// 独自作成の聴解素材。ブラウザの英語音声で読み上げ、提出後にのみ台本を表示する。
+const LISTENING_P=[
+{id:'l01',title:'Office Supply Order',level:600,focus:'意図・言い換え',turns:[
+{who:'A',text:'Did the replacement notebooks arrive? We need them for tomorrow’s workshop.'},
+{who:'B',text:'The supplier sent the wrong size. I asked them to deliver the correct ones by this evening.'},
+{who:'A',text:'Good. Please let me know as soon as they get here, so I can prepare the materials.'}],qs:[
+{q:'What problem did the supplier cause?',ch:['It canceled the workshop.','It sent notebooks in the wrong size.','It delivered the order to another office.','It charged a higher price.'],a:1,skill:'詳細',ex:'sent the wrong size が根拠。'},
+{q:'What does the first speaker want the second speaker to do?',ch:['Change the workshop date','Prepare a new purchase order','Notify the speaker when the notebooks arrive','Return all the workshop materials'],a:2,skill:'意図',ex:'let me know as soon as they get here は到着したら知らせてほしいという依頼。'},
+{q:'When are the correct notebooks expected?',ch:['This evening','Tomorrow morning','Next week','After the workshop'],a:0,skill:'詳細',ex:'deliver the correct ones by this evening とある。'}]},
+{id:'l02',title:'Training Announcement',level:600,focus:'要点・言い換え',turns:[
+{who:'Announcement',text:'The safety training will begin at nine thirty instead of nine because the instructor’s train is delayed. Please wait in Conference Room C. The session will still finish at eleven, and the hands-on exercise will be slightly shorter. Anyone who cannot attend should email the training office before noon today.'}],qs:[
+{q:'Why will the training start later?',ch:['The room is unavailable.','The instructor is delayed.','The exercise requires more time.','The office opens late.'],a:1,skill:'理由',ex:'because the instructor’s train is delayed が理由。'},
+{q:'What part of the training will change?',ch:['The location','The ending time','The length of the practical exercise','The subject of the lesson'],a:2,skill:'言い換え',ex:'hands-on exercise will be slightly shorter は実習時間が短くなるという意味。'},
+{q:'What should absent employees do?',ch:['Call the instructor tomorrow','Email the training office before noon','Go to another conference room','Watch a recording tonight'],a:1,skill:'詳細',ex:'email the training office before noon today とある。'}]},
+{id:'l03',title:'Client Presentation',level:730,focus:'長めの会話・意図',turns:[
+{who:'A',text:'Have you finished the slides for Friday’s client presentation?'},
+{who:'B',text:'Almost. The sales figures are in place, but I am waiting for the design team to approve the new product images.'},
+{who:'A',text:'We promised the client a preview on Thursday morning. Could you send me the draft tonight, even if the images are still temporary?'},
+{who:'B',text:'Of course. I will replace the images after approval and send the final version tomorrow afternoon.'}],qs:[
+{q:'What is preventing the slides from being final?',ch:['Missing sales figures','Unapproved product images','A change in the presentation date','The client’s comments'],a:1,skill:'詳細',ex:'design team to approve the new product images を待っている。'},
+{q:'Why does the first speaker request a draft tonight?',ch:['The presentation is tonight.','The client expects a preview Thursday morning.','The sales team needs a printed copy.','The designer is leaving tomorrow.'],a:1,skill:'意図',ex:'Thursday morning のプレビューに間に合わせるため、仮画像でも今夜の下書きを求めた。'},
+{q:'When will the final version be sent?',ch:['Tonight','Thursday morning','Tomorrow afternoon','Friday evening'],a:2,skill:'詳細',ex:'send the final version tomorrow afternoon とある。'}]},
+{id:'l04',title:'Delivery Message',level:730,focus:'目的・推測',turns:[
+{who:'Message',text:'Hello, this is Maya from Northline Delivery. I am calling about the display panels scheduled for your store opening. Our driver can reach your building by eight tomorrow morning, but the loading entrance will need to be unlocked. If that is too early, please call us before five today. Otherwise, we will keep the original delivery time of ten.'}],qs:[
+{q:'What is the main purpose of the message?',ch:['To cancel the store opening','To offer an earlier delivery','To ask for payment','To report damaged panels'],a:1,skill:'目的',ex:'8時への前倒しが可能だと連絡している。'},
+{q:'What must be ready if the earlier time is chosen?',ch:['A payment receipt','The unlocked loading entrance','A new set of panels','A signed advertisement'],a:1,skill:'推測',ex:'8時の配送なら loading entrance will need to be unlocked。'},
+{q:'What will happen if the store does not request a change?',ch:['Delivery will be canceled.','The panels will arrive at ten.','The driver will arrive at five.','A different company will deliver.'],a:1,skill:'推測',ex:'Otherwise, we will keep the original delivery time of ten とある。'}]}
+];
 // ---------- error visibility ----------
 window.onerror=function(msg,src,line){
   try{
@@ -3234,6 +3300,7 @@ if(!store.gr.lv)store.gr.lv={};
 if(store.gr.cat===undefined)store.gr.cat='all';
 if(!store.gr.day)store.gr.day={d:'',n:0};
 if(!store.read)store.read={attempts:{}};
+if(!store.read.attempts)store.read.attempts={};
 // 保存済みの選択デッキが存在しない場合(公開ビルドで高校デッキを選択中だった等)はTOEICへ戻す
 if(!DECKS[store.cfg.deck])store.cfg.deck='t';
 // 同期のための印：語の最終更新時刻 t・初めて学んだ時刻 f・消した語の墓標 del・設定の更新時刻 setT
@@ -3317,6 +3384,7 @@ function makeQueue(pool,map,keyOf,freshLimit){
 var FACES=[
   {tab:'tabStudy',view:'vStudy',tag:'STUDY',ch:'めくる',deck:1},
   {tab:'tabGram',view:'vGram',tag:'GRAMMAR',ch:'選ぶ',deck:0},
+  {tab:'tabListen',view:'vListen',tag:'LISTEN',ch:'聴く',deck:0},
   {tab:'tabRead',view:'vRead',tag:'READING',ch:'測る',deck:0},
   {tab:'tabList',view:'vList',tag:'INDEX',ch:'引く',deck:1},
   {tab:'tabSet',view:'vSet',tag:'CONFIG',ch:'整える',deck:1}
@@ -3552,6 +3620,107 @@ function renderGram(still){
   h+='</div>'+gFilterBar();
   v.innerHTML=h;
 }
+// ---------- listening practice ----------
+var lView='list',lSession=null,lPlaying=false,lPlaySeq=0;
+function renderListen(){
+  var v=$('vListen');
+  if(lView==='list'){
+    var h=secHead('LISTEN','聴解','独自作成 ∧ '+LISTENING_P.length+' 本')
+      +'<p class="practice-note">音声を聞き、目的・言い換え・話のつながりを選ぶ。台本は提出後に表示する。音声は端末の英語読み上げ機能を使うため、声質は環境によって異なる。</p><div class="ledger">';
+    LISTENING_P.forEach(function(p){
+      var att=store.read.attempts[p.id]||[],last=att.length?att[att.length-1]:null;
+      h+='<div class="row doc"><div class="r1"><span class="w">'+esc(p.title)+'</span></div>'
+        +'<div class="r2"><span class="tag">'+esc(p.focus)+'</span><span class="lab">'+p.level+'点</span>'
+        +(last?'<span class="lab">直近 '+last.correct+'/'+last.total+'</span>':'<span class="lab">未挑戦</span>')
+        +'<span class="acts"><button class="b-row" onclick="startListening(\''+p.id+'\')">開始する</button></span></div></div>';
+    });
+    v.innerHTML=h+'</div>';return;
+  }
+  if(lView==='session'){v.innerHTML=renderListenSessionHtml();lSyncSubmit();return}
+  if(lView==='results')v.innerHTML=renderListenResultsHtml();
+}
+function startListening(id){
+  var p=LISTENING_P.filter(function(x){return x.id===id})[0];if(!p)return;
+  lStop();lSession={p:p,startTs:Date.now(),answers:new Array(p.qs.length).fill(-1)};
+  lView='session';renderListen();window.scrollTo(0,0);
+}
+function lStop(){
+  lPlaying=false;lPlaySeq++;
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+}
+function lPlay(){
+  if(!lSession)return;
+  var status=$('lStatus');
+  if(store.cfg.muted){status.textContent='音声がオフです。右上の音声ボタンをオンにしてください。';return}
+  if(!('speechSynthesis' in window)){status.textContent='このブラウザは音声読み上げに対応していません。';return}
+  lStop();lPlaying=true;
+  var seq=lPlaySeq;
+  var current=lSession,turns=current.p.turns,voices=speechSynthesis.getVoices().filter(function(v){return /^en([-_]|$)/i.test(v.lang)});
+  status.textContent='再生中';
+  function next(i){
+    if(!lPlaying||lSession!==current||seq!==lPlaySeq)return;
+    if(i>=turns.length){lPlaying=false;var s=$('lStatus');if(s)s.textContent='再生が終わりました。もう一度聞けます。';return}
+    var u=new SpeechSynthesisUtterance(turns[i].text);u.lang='en-US';u.rate=0.92;
+    if(voices.length)u.voice=voices[i%Math.min(voices.length,2)];
+    u.onend=function(){next(i+1)};
+    u.onerror=function(){if(lPlaying&&seq===lPlaySeq){lPlaying=false;var s=$('lStatus');if(s)s.textContent='再生できませんでした。端末の音声設定を確認してください。'}};
+    speechSynthesis.speak(u);
+  }
+  next(0);
+}
+function renderListenSessionHtml(){
+  var p=lSession.p;
+  var h='<div class="card">'+CORNERS+'<div class="card-head"><span class="tag">LISTEN</span><span class="card-meta">'+esc(p.focus)+' ∧ '+p.level+'点</span></div>'
+    +'<h2 class="rtitle">'+esc(p.title)+'</h2><p class="practice-note">必要なら繰り返し聞いてから答えてください。台本は提出後に表示します。</p>'
+    +'<div class="listen-actions"><button class="b-sub" onclick="lPlay()">音声を再生／もう一度聞く</button><button class="b-sub" onclick="lStop();$(\'lStatus\').textContent=\'停止しました\'">停止</button></div>'
+    +'<p class="practice-note" id="lStatus" role="status">音声を再生してください。</p>';
+  p.qs.forEach(function(q,qi){
+    h+='<div class="qblock"><div class="qtext"><span class="qn">'+(qi+1)+'</span><span>'+esc(q.q)+'</span></div><div class="opts" id="lq'+qi+'">';
+    q.ch.forEach(function(ch,i){h+='<button class="qopt'+(lSession.answers[qi]===i?' sel':'')+'" onclick="lAnswer('+qi+','+i+')"><span class="opt-k">'+'ABCD'.charAt(i)+'</span><span class="opt-t">'+esc(ch)+'</span></button>'});
+    h+='</div></div>';
+  });
+  return h+'<div class="btns"><button class="b-main" id="lSubmit" onclick="submitListening()">提出する</button></div></div>';
+}
+function lAnswer(qi,i){
+  if(!lSession)return;lSession.answers[qi]=i;
+  var bs=$('lq'+qi).children;for(var k=0;k<bs.length;k++)bs[k].classList.toggle('sel',k===i);
+  buzz(4);lSyncSubmit();
+}
+function lSyncSubmit(){
+  var b=$('lSubmit');if(!b)return;
+  var left=lSession.answers.filter(function(a){return a<0}).length;
+  b.disabled=left>0;b.textContent=left?'提出する（残り '+left+' 問）':'提出する';
+}
+function submitListening(){
+  if(!lSession||lSession.answers.some(function(a){return a<0}))return;
+  lStop();
+  var p=lSession.p,correct=0;p.qs.forEach(function(q,i){if(lSession.answers[i]===q.a)correct++});
+  var attempt={ts:Date.now(),elapsedMs:Date.now()-lSession.startTs,correct:correct,total:p.qs.length,wpm:0};
+  if(!store.read.attempts[p.id])store.read.attempts[p.id]=[];
+  store.read.attempts[p.id].push(attempt);
+  if(store.read.attempts[p.id].length>20)store.read.attempts[p.id].shift();
+  save();lSession.lastAttempt=attempt;lView='results';renderListen();window.scrollTo(0,0);
+}
+function renderListenResultsHtml(){
+  var p=lSession.p,a=lSession.lastAttempt;
+  var h='<div class="card">'+CORNERS+'<div class="card-head"><span class="tag">RESULT</span><span class="card-meta">'+esc(p.title)+'</span></div>'
+    +'<div class="result"><div class="res hero"><span class="tag">正解</span><b class="num">'+a.correct+'/'+a.total+'</b></div>'
+    +'<div class="res"><span class="tag">意図・詳細</span><b class="num">'+p.qs.length+'問</b></div>'
+    +'<div class="res"><span class="tag">所要</span><b class="num">'+rFmtTime(a.elapsedMs)+'</b></div></div>'
+    +secHead('SCRIPT','台本','提出後に表示')
+    +'<div class="transcript">'+p.turns.map(function(t){return esc(t.who+': '+t.text)}).join('\n\n')+'</div>'
+    +secHead(LEX.answers,'答え合わせ',a.correct+'/'+a.total+' 問');
+  p.qs.forEach(function(q,qi){
+    h+='<div class="qblock"><div class="qtext"><span class="qn">'+(qi+1)+'</span><span>'+esc(q.q)+'</span></div><div class="opts">';
+    q.ch.forEach(function(ch,i){
+      var cls='qopt',vd='';if(i===q.a){cls+=' right';vd='<span class="verdict">'+LEX.right+'</span>'}
+      else if(i===lSession.answers[qi]){cls+=' wrong';vd='<span class="verdict">'+LEX.pick+'</span>'}
+      h+='<div class="'+cls+'"><span class="opt-k">'+'ABCD'.charAt(i)+'</span><span class="opt-t">'+esc(ch)+'</span>'+vd+'</div>';
+    });
+    h+='</div><div class="qex">'+esc(q.ex)+'</div></div>';
+  });
+  return h+'<div class="btns"><button class="b-main" onclick="startListening(\''+p.id+'\')">もう一度聞く</button><button class="b-sub" onclick="lView=\'list\';renderListen();window.scrollTo(0,0)">一覧に戻る</button></div></div>';
+}
 // ---------- speed reading ----------
 var rView='list',rSession=null,rTimerId=null;
 function rWordCount(t){return t.trim().split(/\s+/).length}
@@ -3563,13 +3732,16 @@ function renderRead(){
   if(rView==='results'){v.innerHTML=renderReadResultsHtml();return}
 }
 function renderReadListHtml(){
-  var h=secHead(LEX.passages,'長文',READING_P.length+' 本')+'<div class="ledger">';
-  READING_P.forEach(function(p){
+  var h=secHead('FOCUS','700点に向けた重点','推測 ∧ 情報照合')
+    +'<p class="practice-note">まず複数の文書から根拠を探し、変更された情報や条件を照合する。答え合わせでは正解だけでなく、本文のどの表現が根拠か確認する。</p>'
+    +secHead(LEX.passages,'長文',READING_P.length+' 本')+'<div class="ledger">';
+  READING_P.slice().sort(function(a,b){return Number(!!b.focus)-Number(!!a.focus)}).forEach(function(p){
     var att=store.read.attempts[p.id]||[];
     var best=att.reduce(function(m,a){return Math.max(m,a.wpm)},0);
     var last=att.length?att[att.length-1]:null;
     h+='<div class="row doc"><div class="r1"><span class="w">'+esc(p.title)+'</span></div>'
       +'<div class="r2"><span class="tag">'+esc(p.genre)+'</span><span class="lab">'+p.level+'点</span>'
+      +(p.focus?'<span class="lab hi">'+esc(p.focus)+'</span>':'')
       +(att.length?'<span class="lab hi">自己ベスト '+best+' WPM</span><span class="lab">直近 '+last.correct+'/'+last.total+'</span>':'<span class="lab">未挑戦</span>')
       +'<span class="acts"><button class="b-row" onclick="startReading(\''+p.id+'\')">開始する</button></span></div></div>';
   });
@@ -3597,7 +3769,8 @@ function renderReadSessionHtml(){
     +'<b class="timer num" id="rTimer" aria-label="経過時間">'+rFmtTime(Date.now()-rSession.startTs)+'</b><div class="secline" aria-hidden="true"><i id="rSec"></i></div></div>'
     +'<h2 class="rtitle">'+esc(p.title)+'</h2><div class="passage">'+esc(p.body)+'</div>';
   p.qs.forEach(function(q,qi){
-    h+='<div class="qblock"><div class="qtext"><span class="qn">'+(qi+1)+'</span><span>'+esc(q.q)+'</span></div><div class="opts" id="rq'+qi+'">';
+    h+='<div class="qblock"><div class="qtext"><span class="qn">'+(qi+1)+'</span><span>'+esc(q.q)+'</span></div>'
+      +(q.skill?'<span class="lab">'+esc(q.skill)+'</span>':'')+'<div class="opts" id="rq'+qi+'">';
     q.ch.forEach(function(ch,i){
       h+='<button class="qopt'+(rSession.answers[qi]===i?' sel':'')+'" onclick="rAnswer('+qi+','+i+')"><span class="opt-k">'+'ABCD'.charAt(i)+'</span><span class="opt-t">'+esc(ch)+'</span></button>';
     });
@@ -3647,7 +3820,8 @@ function renderReadResultsHtml(){
   h+=secHead(LEX.answers,'答え合わせ',a.correct+'/'+a.total+' 問');
   p.qs.forEach(function(q,qi){
     var ua=rSession.answers[qi];
-    h+='<div class="qblock"><div class="qtext"><span class="qn">'+(qi+1)+'</span><span>'+esc(q.q)+'</span></div><div class="opts">';
+    h+='<div class="qblock"><div class="qtext"><span class="qn">'+(qi+1)+'</span><span>'+esc(q.q)+'</span></div>'
+      +(q.skill?'<span class="lab">'+esc(q.skill)+'</span>':'')+'<div class="opts">';
     q.ch.forEach(function(ch,i){
       var cls='qopt',vd='';
       if(i===q.a){cls+=' right';vd='<span class="verdict">'+LEX.right+'</span>'}
@@ -3863,6 +4037,7 @@ function syncMerge(a,b){
 var SYNC_KEY='lexiconSync';
 // last=最後に同期先と揃えた時刻（これより後に触れたものだけを送る）/ at=最後に同期できた時刻
 var SYNC={code:'',last:0,at:0,state:'idle',err:'',busy:false,dirty:false,dirtyAt:0,timer:0,joining:false,show:false};
+var SYNC_PENDING='';
 try{var sv0=JSON.parse(lsGet(SYNC_KEY)||'null');if(sv0&&sv0.code){SYNC.code=sv0.code;SYNC.last=+sv0.last||0;SYNC.at=+sv0.at||0}}catch(e){}
 function syncSaveMeta(){lsSet(SYNC_KEY,JSON.stringify({code:SYNC.code,last:SYNC.last,at:SYNC.at}))}
 function syncUsable(){return /^https?:$/.test(location.protocol)}
@@ -3944,6 +4119,7 @@ function syncJoin(raw){
   var c=normCode(raw);
   if(c.length!==24){SYNC.state='err';SYNC.err='コードは 24 文字（A〜Z と 2〜7）';renderSyncState();return}
   if(SYNC.code&&SYNC.code!==c&&!confirm('いま繋いでいる同期先から、別のコードの同期先へ繋ぎ替えます。よろしいですか？'))return;
+  SYNC_PENDING='';
   SYNC.code=c;SYNC.last=0;SYNC.at=0;SYNC.joining=true;SYNC.err='';syncSaveMeta();
   syncNow(true);   // 初回は端末にある進捗を全部送り、同期先の進捗と合わせる
 }
@@ -3982,7 +4158,7 @@ function renderSyncState(){
       +'<button class="b-main" onclick="syncJoin($(\'syncIn\').value)">繋ぐ</button></div>'
       +'<span class="sync-err">'+(SYNC.state==='err'?esc(SYNC.err):'')+'</span></div></div>'
       +'<p class="note">この端末は記録 '+fmt(localCount())+' 語 ∧ '+openedAs()+'で開いている。ホーム画面のアプリとブラウザ、別のアプリ内のブラウザは、それぞれ記録の置き場所が別になる。普段学習している開き方で繋ぐこと。</p>'
-      +'<p class="note">同じコードを入れた端末どうしで、学習の進捗・設定・速読の記録が揃う。この端末の進捗は、繋いだときに同期先の進捗と合わせられ、どちらも失われない。</p>';
+      +'<p class="note">同じコードを入れた端末どうしで、学習の進捗・設定・読解・聴解の記録が揃う。この端末の進捗は、繋いだときに同期先の進捗と合わせられ、どちらも失われない。</p>';
     return;
   }
   meta.textContent=st0[0]==='run'?'同期中':'接続中';
@@ -3996,6 +4172,10 @@ function renderSyncState(){
     +'<button class="b2" onclick="syncCopy(this,syncLink())">別の端末に繋ぐリンクをコピーする</button>'
     +'<button class="b2 danger" onclick="syncLeave()">この端末の同期を解く</button></div>'
     +'<p class="note">コードを知る人は誰でもこの進捗を読み書きできる。人に見せない。</p>';
+  if(SYNC_PENDING&&SYNC_PENDING!==SYNC.code){
+    box.insertAdjacentHTML('afterbegin','<p class="practice-note">別の同期リンクを開きました。接続先を変える場合は確認してください。</p>'
+      +'<button class="b2" onclick="syncJoin(SYNC_PENDING)">リンクの同期先へ繋ぐ</button>');
+  }
 }
 document.addEventListener('visibilitychange',function(){
   if(!SYNC.code)return;
@@ -4028,6 +4208,7 @@ window.addEventListener('storage',function(e){
 function measureHead(){document.documentElement.style.setProperty('--head-h',$('hdr').offsetHeight+'px')}
 function showFace(i){
   var f=FACES[i];
+  if(f.view!=='vListen'&&lPlaying)lStop();
   FACES.forEach(function(u,j){
     $(u.tab).classList.toggle('on',j===i);
     $(u.tab).setAttribute('aria-current',j===i?'page':'false');
@@ -4041,6 +4222,7 @@ function showFace(i){
   if(f.view==='vList')renderList();
   if(f.view==='vSet'){loadSet();renderSyncState()}
   if(f.view==='vGram')renderGram();
+  if(f.view==='vListen')renderListen();
   if(f.view==='vRead')renderRead();
 }
 FACES.forEach(function(f,i){$(f.tab).onclick=function(){showFace(i)}});
@@ -4064,7 +4246,10 @@ showFace(0);
 (function(){
   var m=location.hash.match(/sync=([A-Za-z2-7-]+)/);
   if(m){history.replaceState(null,'',location.pathname+location.search);
-    if(syncUsable()&&normCode(m[1])!==SYNC.code){syncJoin(m[1]);showFace(4);return}}
+    if(syncUsable()&&normCode(m[1])!==SYNC.code){
+      SYNC_PENDING=normCode(m[1]);showFace(5);
+      if($('syncIn'))$('syncIn').value=fmtCode(SYNC_PENDING);
+      return}}
   if(MIGRATED)saveLocal();
   if(SYNC.code)syncNow(true);
 })();

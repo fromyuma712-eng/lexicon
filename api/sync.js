@@ -88,8 +88,21 @@ export async function POST(request) {
 
 async function handle(request) {
   if ((+request.headers.get('content-length') || 0) > MAX_BYTES) return json({ error: 'too large' }, 413);
-  let body;
-  try { body = await request.json(); } catch { return json({ error: 'bad request' }, 400); }
+  // content-length が無い転送でも上限を守る。JSON 全体を読み込んでから判定しない。
+  if (!request.body) return json({ error: 'bad request' }, 400);
+  const reader = request.body.getReader(), chunks = [];
+  let size = 0, body;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BYTES) { await reader.cancel(); return json({ error: 'too large' }, 413); }
+      chunks.push(Buffer.from(value));
+    }
+    body = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks)));
+  } catch { return json({ error: 'bad request' }, 400); }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return json({ error: 'bad request' }, 400);
   const code = normCode(body && body.code);
   if (code.length !== CODE_LEN) return json({ error: 'bad code' }, 400);
   const path = pathOf(code);
@@ -102,6 +115,8 @@ async function handle(request) {
     return json({ ok: true });
   }
 
+  if (body.op !== 'sync' || !body.doc || typeof body.doc !== 'object' || Array.isArray(body.doc))
+    return json({ error: 'bad request' }, 400);
   const incoming = clean(body.doc);
   // 同時に来た書き込みとぶつかったら、少し間を置いて読み直す（間隔は伸ばし、揺らぎを入れて再衝突を避ける）
   for (let i = 0; i < 8; i++) {
@@ -110,6 +125,7 @@ async function handle(request) {
     if (!cur) return json({ error: 'not found' }, 404);
     const merged = syncMerge(cur.doc, incoming);
     const text = JSON.stringify(merged);
+    if (Buffer.byteLength(text, 'utf8') > MAX_BYTES) return json({ error: 'too large' }, 413);
     if (text === JSON.stringify(cur.doc)) return json({ doc: merged });
     try {
       await put(path, text, { ...OPTS, allowOverwrite: true, ifMatch: cur.etag });
